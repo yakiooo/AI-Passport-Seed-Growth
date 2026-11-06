@@ -1,5 +1,6 @@
 // tests/test_seed_story.c —— 节点链图完整性宿主测试。
-// 断言: 所有 next 编码合法; 从节点 1 出发 32 个节点全部可达; 13 个结局全部可达。
+// 断言: 所有 next 编码合法; 从节点 1 出发 32 个节点全部可达; 12 个普通结局全部可达;
+//       隐藏结局(SEED_HIDDEN_ENDING)由运行时集齐解锁, 不要求静态可达, 仅校验数据完整性。
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -48,9 +49,15 @@ int main(void)
         if (!seen_node[i]) { fprintf(stderr, "node %d unreachable\n", i); return 1; }
     }
     for (int i = 1; i <= SEED_ENDING_COUNT; i++) {
+        if (i == SEED_HIDDEN_ENDING) continue;     // 隐藏结局运行时解锁, 不要求静态可达
         if (!seen_end[i]) { fprintf(stderr, "ending %d unreachable\n", i); return 1; }
         const seed_ending_t *e = &SEED_ENDINGS[i];
         assert(e->name && e->story && e->form < 32 && e->color != 0);
+    }
+    // 隐藏结局: 单独校验数据完整性(name/story/form/color 齐备)
+    {
+        const seed_ending_t *hidden = &SEED_ENDINGS[SEED_HIDDEN_ENDING];
+        assert(hidden->name && hidden->story && hidden->form < 32 && hidden->color != 0);
     }
 
     // 3) 每个形态素材至少被一个节点或结局引用
